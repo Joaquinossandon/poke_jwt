@@ -1,9 +1,11 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const cors = require("cors");
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = "hola_caracola";
@@ -30,6 +32,8 @@ const verifyToken = (req, res, next) => {
 app.post("/register", async (req, res) => {
     const { username, password } = req.body;
 
+    console.log(username, password);
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     users.push({
@@ -43,6 +47,7 @@ app.post("/register", async (req, res) => {
 
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
+    console.log(users);
 
     const user = users.find((user) => user.username === username);
 
