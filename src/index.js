@@ -4,13 +4,20 @@ const bcrypt = require("bcryptjs");
 const cors = require("cors");
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = "hola_caracola";
 
-const users = [];
+const users = [
+    {
+        role: "admin",
+        email: "admin@admin.com",
+        password: async () => await bcrypt.hash("admin123", 10),
+        catched: [],
+    },
+];
 
 const verifyToken = (req, res, next) => {
     const token = req.headers["authorization"];
@@ -32,12 +39,11 @@ const verifyToken = (req, res, next) => {
 app.post("/register", async (req, res) => {
     const { username, password } = req.body;
 
-    console.log(username, password);
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
     users.push({
-        username,
+        role: "user",
+        email: username,
         password: hashedPassword,
         catched: [],
     });
@@ -46,10 +52,10 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
     console.log(users);
 
-    const user = users.find((user) => user.username === username);
+    const user = users.find((user) => user.email === email);
 
     if (!user) {
         return res.status(400).json({ message: "Usuario no encontrado" });
@@ -61,24 +67,24 @@ app.post("/login", async (req, res) => {
         return res.status(400).json({ message: "Contraseña incorrecta" });
     }
 
-    const token = jwt.sign(
-        { username: user.username, catched: user.catched },
-        SECRET_KEY
-    );
+    const token = jwt.sign({ email: user.email, role: user.role }, SECRET_KEY);
 
     res.status(200).json({ token });
 });
 
 app.get("/profile", verifyToken, (req, res) => {
-    const { user } = req;
-    res.json(user);
+    const { email, role } = req.user;
+
+    const user = users.find((user) => user.username === email);
+
+    res.json({ email: user.email, catched: user.catched });
 });
 
 app.post("/catch", verifyToken, (req, res) => {
     const { catched } = req.body;
     const user = req.user;
     // buscar al usuario en el array de usuarios
-    const index = users.findIndex((u) => u.username === user.username);
+    const index = users.findIndex((u) => u.email === user.email);
     // aadir los pokemones al array de pokemones del usuario
     users[index].catched.push(...catched);
     // devolver los pokemones del usuario
