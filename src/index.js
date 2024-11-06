@@ -36,6 +36,10 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+app.get("/", (req, res) => {
+    res.send("Usuarios con JWT y pokemones");
+});
+
 app.post("/register", async (req, res) => {
     const { email, password } = req.body;
 
