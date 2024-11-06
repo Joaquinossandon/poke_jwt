@@ -37,13 +37,13 @@ const verifyToken = (req, res, next) => {
 };
 
 app.post("/register", async (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     users.push({
         role: "user",
-        email: username,
+        email: email,
         password: hashedPassword,
         catched: [],
     });
@@ -53,7 +53,6 @@ app.post("/register", async (req, res) => {
 
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
-    console.log(users);
 
     const user = users.find((user) => user.email === email);
 
@@ -73,9 +72,16 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/profile", verifyToken, (req, res) => {
+    console.log(req.user);
     const { email, role } = req.user;
 
-    const user = users.find((user) => user.username === email);
+    const user = users.find((u) => u.email === email);
+
+    if (!user) {
+        return res.status(400).json({
+            message: "Usuario no encontrado",
+        });
+    }
 
     res.json({ email: user.email, catched: user.catched });
 });
